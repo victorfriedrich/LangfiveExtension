@@ -56,7 +56,22 @@ const siteApiMap = {
     subtitleTransformType: 'replace',
     subtitleSelector: '#movie_player .ytp-caption-window-container',
     subtitlePopupSelector: '#movie_player',
-    popupOffsetBottom: 4,
+    popupOffsetBottom: 8,
+    pause() {
+      if (document.querySelector<HTMLVideoElement>('#movie_player video')?.paused)
+        return false;
+      document.querySelector<HTMLVideoElement>('#movie_player video')?.pause();
+      return true;
+    },
+    play() {
+      document.querySelector<HTMLVideoElement>('#movie_player video')?.play();
+    },
+  },
+  'localhost:3000': {
+    subtitleTransformType: 'replace',
+    subtitleSelector: '#movie_player .ytp-caption-window-container',
+    subtitlePopupSelector: '#movie_player',
+    popupOffsetBottom: 8,
     pause() {
       if (document.querySelector<HTMLVideoElement>('#movie_player video')?.paused)
         return false;

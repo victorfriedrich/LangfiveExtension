@@ -5,12 +5,8 @@
 }
 
 .sub-tr-word-hidden {
-  filter: blur(0.2em);
-  background-color: rgb(255, 255, 255);
-  border-radius: 0.4em;
-  transform: scale(0.9, 0.6);
-  transform-origin: center center;
-  /*transition: all .1s ease-in;*/
+  color: rgb(255, 183, 50);
+  transition: all .1s ease-in;
 }
 
 .sub-tr-mask {
@@ -19,7 +15,7 @@
 }
 
 .sub-tr-mask-hidden {
-  background-color: rgb(255, 255, 255);
+  
   border-radius: 10px;
   transition: all .1s ease-in;
 }

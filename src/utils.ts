@@ -1,7 +1,7 @@
 import { popupHeight, popupVerticalOffset, popupWidth } from './markup';
 import debounce from 'lodash-es/debounce';
 
-export const logPrefix = '\u001b[1;36m[Spotlight Lingo \uD83C\uDF0E]';
+export const logPrefix = 'Langfive ';
 
 export function createElementFromHTML(htmlString: string) {
   const div = document.createElement('div');
@@ -59,9 +59,6 @@ export function fetchTextNodes(node: Node | Text): Text[] {
   return result;
 }
 
-/**
- * Positions an element relative to the anchor element.
- * */
 export function positionElement(
   element: HTMLElement,
   anchorElement: HTMLElement,

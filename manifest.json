@@ -1,10 +1,10 @@
 {
-  "name": "Spotlight Lingo \uD83C\uDF0E. Point to Translate Words in Subtitles",
-  "version": "1.1.1",
-  "description": "Point your mouse to a subtitles word to translate it on Netflix, Amazon Prime, YouTube \uD83C\uDDEC\uD83C\uDDE7\uD83C\uDDEA\uD83C\uDDF8\uD83C\uDDE9\uD83C\uDDEA\uD83C\uDDEB\uD83C\uDDF7\uD83C\uDDEE\uD83C\uDDF9\uD83C\uDDF7\uD83C\uDDFA",
+  "name": "Langfive",
+  "version": "1.1",
+  "description": "Directly translate and add words to your flashcards within YouTube and Netflix",
   "manifest_version": 3,
   "background": {
-    "service_worker": "src/backgroundScript.ts",
+    "service_worker": "src/backgroundScript.js",
     "type": "module"
   },
   "action": {
@@ -26,19 +26,32 @@
       "*://*.netflix.com/*",
       "*://*.kino.pub/*",
       "*://*.youtube.com/*",
-      "*://*.primevideo.com/*"
+      "*://*.primevideo.com/*",
+      "http://localhost:3000/*"
     ],
-    "js": ["src/contentScript.ts"]
+    "js": ["src/contentScript.js"]
   }],
   "web_accessible_resources": [{
-    "resources": ["src/index.ts", "src/index.css", "images/demo.webp"],
+    "resources": [
+      "src/index.js",
+      "src/index.css",
+      "src/spinner.css",
+      "images/demo.webp",
+      "src/auth_handler.html",
+      "src/auth_handler.js",
+      "src/auth.html",
+      "src/auth.js"
+    ],
     "matches": ["<all_urls>"]
   }],
   "host_permissions": [
     "https://www.netflix.com/*",
-    "https://kino.pub/*",
     "https://www.youtube.com/*",
-    "https://www.primevideo.com/*"
+    "https://www.primevideo.com/*",
+    "http://localhost:3000/*"
   ],
-  "permissions": ["storage"]
+  "permissions": [
+    "storage",
+    "identity"
+  ]
 }

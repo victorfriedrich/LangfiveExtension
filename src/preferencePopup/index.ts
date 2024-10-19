@@ -1,7 +1,9 @@
 import tokens from '../textProcessing/tokens.json';
 import { Language, languages } from './languages';
 import { getPrefs, Prefs, setPrefs } from './prefs';
+import { supabase } from '../supabaseclient';
 
+const emailEl = document.querySelector<HTMLInputElement>('#mail')!;
 const versionEl = document.querySelector<HTMLInputElement>('#version')!;
 const commonWordsRangeInputEl = document.querySelector<HTMLInputElement>(
   '.commonWordsRangeInput',
@@ -31,6 +33,63 @@ const tabContentEls = Array.from(
   document.querySelectorAll<HTMLDivElement>('.tab-content'),
 );
 const settingsLinkEl = document.querySelector<HTMLAnchorElement>('#settings-link')!;
+
+// Select DOM elements
+const loginSection = document.getElementById('login-section') as HTMLElement;
+const logoutSection = document.getElementById('logout-section') as HTMLElement;
+const loginButton = document.getElementById('login-button') as HTMLButtonElement;
+const logoutButton = document.getElementById('logout-button') as HTMLButtonElement;
+
+// Function to update UI based on authentication state
+function updateAuthUI(session: any) {
+  if (session) {
+    console.log(session);
+    emailEl.innerHTML = `${session.user.email}`
+    loginSection.classList.remove('active');
+    logoutSection.classList.add('active');
+    // Optionally, display user info
+  } else {
+    logoutSection.classList.remove('active');
+    loginSection.classList.add('active');
+  }
+}
+
+// Listen for authentication state changes
+supabase.auth.onAuthStateChange((_event, session) => {
+  updateAuthUI(session);
+});
+
+// Initial check
+supabase.auth.getSession().then(({ data: { session } }) => {
+  updateAuthUI(session);
+});
+
+// Handle login button click
+loginButton.addEventListener('click', () => {
+  const authUrl = chrome.runtime.getURL('src/auth.html');
+  console.log('Auth URL:', authUrl);
+  chrome.tabs.create({ url: authUrl });
+});
+
+// Handle logout button click
+logoutButton.addEventListener('click', async () => {
+  const { error } = await supabase.auth.signOut();
+
+  const logoutEvent = new CustomEvent("logout", {
+    detail: {
+      reason: 'user_initiated',
+      timestamp: new Date().toISOString()
+    }
+  });
+  
+  window.dispatchEvent(logoutEvent);
+
+  if (error) {
+    console.error('Error signing out:', error.message);
+  } else {
+    console.log('User signed out.');
+  }
+});
 
 const prefsState = {
   get targetLang(): string {

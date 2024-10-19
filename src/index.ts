@@ -1,6 +1,5 @@
 import {
   wrapNodeWords,
-  updateWordsToHide,
   maskTextWords,
   WordMask,
 } from './textProcessing/wrapNodeWords';
@@ -30,6 +29,8 @@ import addMouseEnterLeaveEventListeners, {
   logPrefix,
   positionElement,
 } from './utils';
+import { fetchWords } from './fetchWords';
+import { ensureSupabaseSession } from './supabaseclient';
 
 const siteApi = getSiteSpecificApi(location.host);
 let sourceLang = defaultPrefs.sourceLang;
@@ -45,7 +46,7 @@ let isVideoPaused = false;
 /**
  * Wraps words of the target text in separate tags.
  * */
-function wrapWordsInTextElement(textNode: Text): void {
+function wrapWordsInTextElement(textNode: Text, wordsToHide: Set<string>): void {
   const parentElClassList = textNode.parentElement?.classList;
   if (
     parentElClassList?.contains?.(subWordClassName) ||
@@ -57,6 +58,7 @@ function wrapWordsInTextElement(textNode: Text): void {
     textNode,
     getSubtitlesWordHTML,
     getSubtitlesHiddenWordHTML,
+    wordsToHide
   ).text;
   const wrappedText = createElementFromHTML(getWordWrapperHTML(processedText));
   textNode.parentElement!.replaceChild(wrappedText, textNode);
@@ -76,7 +78,7 @@ function insertWordMasksInDOM(targetElement: HTMLElement, wordMasks: WordMask[])
   return rectElements;
 }
 
-function addWordMasks(textNode: Text) {
+function addWordMasks(textNode: Text, wordsToHide: Set<string>) {
   const containerEl = document.querySelector<HTMLElement>(
     'maskContainerSelector' in siteApi
       ? siteApi.maskContainerSelector
@@ -89,7 +91,7 @@ function addWordMasks(textNode: Text) {
     containerEl.style.position = 'relative';
   }
 
-  const wordMasks = maskTextWords(textNode);
+  const wordMasks = maskTextWords(textNode, wordsToHide);
   const masks = insertWordMasksInDOM(containerEl, wordMasks);
   subtitleMasks.set(textNode, masks);
 }
@@ -130,14 +132,26 @@ function playVideo() {
 }
 
 function translateWord(el: HTMLElement, popupEl: HTMLElement) {
-  translate(el.dataset['word'] ?? el.innerText, sourceLang, targetLang)
-    .then((translations) => {
-      insertTranslationResult(popupEl, translations);
+  const word = el.dataset['word'] ?? el.innerText;
+  const language = targetLang; // Assuming targetLang is already defined
+
+  translate(word, language)
+    .then((translation) => {
+      if (translation) {
+        insertTranslationResult(popupEl, translation, hideTranslationPopup);
+      } else {
+        // Handle translation failure
+        insertTranslationResult(popupEl, {
+          id: 0,
+          root: 'unknown',
+          translation: 'Translation not available.',
+        },
+      hideTranslationPopup);
+      }
     })
     .catch((error) => {
-      if (error.name !== 'AbortError') {
-        throw error;
-      }
+      console.error('Translation error:', error);
+      throw error;
     });
 }
 
@@ -159,24 +173,31 @@ function sendPopupViewedMessage(isHidden: boolean) {
 
 // Observe subtitles change on a page and replace text nodes with hidden words
 // or with just custom nodes to make translation on mouseover easier
-if (siteApi.subtitleTransformType === 'mask') {
+fetchWords("italian").then((words) => {
+  console.log("italian", words)
+  if (siteApi.subtitleTransformType === 'mask') {
+
   startTextMutationObserver({
     containerSelector: siteApi.subtitleSelector,
-    onTextAdded: addWordMasks,
+    onTextAdded(textNode) {
+      addWordMasks(textNode, words)
+    },
     onTextRemoved: removeWordMasks,
     onTextChanged(textNode) {
       removeWordMasks(textNode);
-      addWordMasks(textNode);
+      addWordMasks(textNode, words);
     },
   });
 } else {
   startTextMutationObserver({
     containerSelector: siteApi.subtitleSelector,
     onTextAdded(textNode) {
-      wrapWordsInTextElement(textNode);
+      wrapWordsInTextElement(textNode, words);
     },
   });
 }
+})
+
 
 function onWordLeaveHandler(el: HTMLElement) {
   hideTranslationPopup();
@@ -225,13 +246,11 @@ addMouseEnterLeaveEventListeners({
 // Listen to changes in preferences and update lang and word settings.
 document.addEventListener('prefs', (event: CustomEvent<Prefs>) => {
   const prefs = event.detail;
-  updateWordsToHide(
-    prefs.hideWords,
-    prefs.wordCount,
-    prefs.contractions,
-    prefs.informal,
-    prefs.hideType,
-  );
+  // updateWordsToHide(
+  //   // prefs.hideWords,
+  //   true,
+  //   new Set(["the", "short", "answer"])
+  // );
   sourceLang = prefs.sourceLang;
   targetLang = prefs.targetLang;
 

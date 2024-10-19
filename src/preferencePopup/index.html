@@ -72,10 +72,18 @@
     .tab-content.active {
       display: block;
     }
+    /* Add styles for login/logout */
+    #login-section, #logout-section {
+      display: none;
+    }
+    #login-section.active, #logout-section.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
-  <h2>Spotlight Lingo 🌎</h2>
+  <h2>Langfive</h2>
+  <p>Signed in as <span id="mail"></span></p>
   <sub id="version" style="color: gray;position: absolute;right: 0.5rem;top: 0.5rem;"></sub>
   <div class="tabs">
     <button class="tab" name="description">Description 💬</button>
@@ -84,9 +92,8 @@
 
   <div class="tab-content" data-name="description">
     <p style="font-size: 1.2em">
-      Start watching video with subtitles on <b>Netflix</b>, <b>Amazon Prime Video</b>, <b>YouTube</b>, or <b>Kinopub</b>, then hover your mouse over any word and a translation will instantly appear in a popup.
+      Directly integrate Langfive with <b>Netflix</b>, <b>Amazon Prime Video</b> or <b>YouTube</b>. Hover over a word to see its translation and add it to your flashcards.
     </p>
-    <p style="font-size: 1.2em">You can set translation language in the <a id="settings-link" style="cursor: pointer"><b>Settings&nbsp;⚙️</b></a> tab.</p>
     <img src="../../images/demo.webp" alt="demo" style="width: 100%; height: auto;">
   </div>
 
@@ -97,7 +104,7 @@
     <p>
       <label>
         <input type="checkbox" class="commonWordsInput">
-        Hide words (useful for language learners) <b>(English only)</b>
+        Color unknown words orange
       </label>
     </p>
     <div>
@@ -140,10 +147,15 @@
     </div>
   </div>
   <hr>
-  <ul style="padding-left: 16px">
-    <li><a target="_blank" href="https://github.com/gevgeny/SubTranslator/issues/new">Ask for improvement or report a bug</a></li>
-  </ul>
+  <!-- Login Section -->
+  <div id="login-section" class="active">
+    <button id="login-button">Login</button>
+  </div>
+
+  <!-- Logout Section -->
+  <div id="logout-section">
+    <button id="logout-button">Logout</button>
+  </div>
   <script src="./index.ts" type="module"></script>
 </body>
 </html>
-

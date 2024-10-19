@@ -28,18 +28,40 @@ export function insertTranslationPopup(
 
   const popupEl = shadow.querySelector(`.${subPopupClassName}`) as HTMLElement;
   positionElement(popupEl, targetEl, containerEl);
-  popupEl.querySelector('.sub-tr-close-icon')?.addEventListener('click', onClose);
+  popupEl.querySelector('.sub-tr-plus-button')?.addEventListener('click', onClose);
   return popupEl;
+}
+
+function postToContentScript(data: any) {
+  window.postMessage({
+    source: "translationPopup",
+    payload: data
+  }, "*");
 }
 
 export function insertTranslationResult(
   translationPopupEl: HTMLElement,
-  translations: Translation[],
+  translations: Translation,
+  hideTranslationPopup: () => void
 ) {
-  const html = getTranslationHTML(translations);
+  const html = getTranslationHTML([translations]);
   const loaderEl = translationPopupEl.querySelector(`.${subLoadingClassName}`);
   loaderEl?.insertAdjacentHTML('afterend', toTrustedHTML(html));
   loaderEl?.remove();
+
+  // Attach event listeners to the new buttons
+  translationPopupEl.querySelectorAll('.sub-tr-plus-button').forEach(button => {
+    button.addEventListener('click', async () => {
+      const wordId = button.getAttribute('data-id');
+      if (wordId) {
+        hideTranslationPopup();
+        postToContentScript({ wordId })
+
+      } else {
+        console.error('No word ID found');
+      }
+    });
+  });
 }
 
 export function hideTranslationPopup() {
