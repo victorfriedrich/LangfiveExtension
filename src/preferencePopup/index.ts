@@ -3,7 +3,7 @@ import { Language, languages } from './languages';
 import { getPrefs, Prefs, setPrefs } from './prefs';
 import { supabase } from '../supabaseclient';
 
-const emailEl = document.querySelector<HTMLInputElement>('#mail')!;
+const emailEl = document.querySelector<HTMLInputElement>('#authinfo')!;
 const versionEl = document.querySelector<HTMLInputElement>('#version')!;
 const commonWordsRangeInputEl = document.querySelector<HTMLInputElement>(
   '.commonWordsRangeInput',
@@ -11,7 +11,7 @@ const commonWordsRangeInputEl = document.querySelector<HTMLInputElement>(
 const sourceLangSelectEl =
   document.querySelector<HTMLSelectElement>('.sourceLangSelect')!;
 const targetLangSelectEl =
-  document.querySelector<HTMLSelectElement>('.targetLangSelect')!;
+  document.querySelector<HTMLSelectElement>('.sourceLangSelect')!;
 const hideWordsInputEl = document.querySelector<HTMLInputElement>('.commonWordsInput')!;
 const hideWordsSectionEl = document.querySelector<HTMLInputElement>('.hideWordsSection')!;
 const contractionsWordsInputEl = document.querySelector<HTMLInputElement>(
@@ -44,11 +44,12 @@ const logoutButton = document.getElementById('logout-button') as HTMLButtonEleme
 function updateAuthUI(session: any) {
   if (session) {
     console.log(session);
-    emailEl.innerHTML = `${session.user.email}`
+    emailEl.innerHTML = `Signed in as ${session.user.email}`
     loginSection.classList.remove('active');
     logoutSection.classList.add('active');
     // Optionally, display user info
   } else {
+    emailEl.innerHTML = 'Sign in to get started'
     logoutSection.classList.remove('active');
     loginSection.classList.add('active');
   }
@@ -180,6 +181,7 @@ const prefsState = {
 } as Prefs;
 
 function applyPrefs(): void {
+  console.log("Fetching prefs")
   getPrefs((storagePrefs) => {
     prefsState.targetLang = storagePrefs.targetLang;
     prefsState.sourceLang = storagePrefs.sourceLang;
@@ -204,6 +206,7 @@ function sendPrefsUpdate(): void {
 }
 
 function savePrefs(): void {
+  console.log("Saving prefs")
   setPrefs(prefsState, sendPrefsUpdate);
 }
 

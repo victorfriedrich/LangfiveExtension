@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Article Reader</title>
+  <link rel="stylesheet" href="reader.css">
+</head>
+<body>
+  <div id="reader-container">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading article...</p>
+    </div>
+  </div>
+  
+  <script type="module" src="contentScript.js"></script>
+
+  <!-- Load API service first -->
+  <script src="api-service.js"></script>
+  
+  <!-- Then load main reader script -->
+  <script src="reader.js"></script>
+</body>
+</html>

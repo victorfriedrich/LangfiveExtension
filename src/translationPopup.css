@@ -10,20 +10,29 @@
   flex-direction: column;
   padding: 12px;
   font-family: Arial, sans-serif;
-  min-width: 150px; /* Set a minimum width */
-  max-width: 400px; /* Optional: set a maximum width */
-  width: auto; /* Allow width to adjust based on content */
-  height: auto; /* Allow height to adjust based on content */
-  max-height: 80vh; /* Prevent popup from exceeding viewport height */
-  overflow: hidden; /* Hide any overflowing content */
-  transition: width 0.3s ease, height 0.3s ease; /* Smooth transitions */
+  min-width: 150px;
+  /* Set a minimum width */
+  max-width: 400px;
+  /* Optional: set a maximum width */
+  width: auto;
+  /* Allow width to adjust based on content */
+  height: auto;
+  /* Allow height to adjust based on content */
+  max-height: 80vh;
+  /* Prevent popup from exceeding viewport height */
+  overflow: hidden;
+  /* Hide any overflowing content */
+  transition: width 0.3s ease, height 0.3s ease;
+  /* Smooth transitions */
   margin-bottom: 10px;
-  transform: translateY(-32px);
+  transform: translateY(-38px);
 }
 
 .sub-tr-popup-content {
-  max-height: none; /* Remove fixed max-height */
-  overflow-y: auto; /* Enable vertical scrolling if needed */
+  max-height: none;
+  /* Remove fixed max-height */
+  overflow-y: auto;
+  /* Enable vertical scrolling if needed */
 }
 
 .sub-tr-dict-item {
@@ -71,7 +80,8 @@
   margin-left: 12px;
   margin-right: 12px;
   text-align: center;
-  word-wrap: break-word; /* Allow long words to wrap */
+  word-wrap: break-word;
+  /* Allow long words to wrap */
 }
 
 .sub-tr-dict-item-ts {
@@ -125,12 +135,14 @@
 /* Optional: Responsive Design */
 @media (max-width: 600px) {
   .sub-tr-popup {
-    max-width: 90%; /* Adjust max-width for smaller screens */
+    max-width: 90%;
+    /* Adjust max-width for smaller screens */
   }
 }
 
 @media (min-width: 601px) {
   .sub-tr-popup {
-    max-width: 400px; /* Default max-width for larger screens */
+    max-width: 400px;
+    /* Default max-width for larger screens */
   }
 }

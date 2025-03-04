@@ -3,7 +3,8 @@ import {
   maskTextWords,
   WordMask,
 } from './textProcessing/wrapNodeWords';
-import { translate, cancelTranslate } from './translate';
+import { translate } from './translate';
+import { storeWords, getStoredWords } from './wordstorage'
 import {
   insertTranslationPopup,
   insertTranslationResult,
@@ -30,7 +31,6 @@ import addMouseEnterLeaveEventListeners, {
   positionElement,
 } from './utils';
 import { fetchWords } from './fetchWords';
-import { ensureSupabaseSession } from './supabaseclient';
 
 const siteApi = getSiteSpecificApi(location.host);
 let sourceLang = defaultPrefs.sourceLang;
@@ -103,6 +103,10 @@ function removeWordMasks(textNode: Text) {
 }
 
 function adjustTranslationPopupPosition() {
+  if (!siteApi.subtitlePopupSelector || siteApi.subtitlePopupSelector.trim() === '') {
+    return;
+  }
+
   const containerEl = document.querySelector<HTMLElement>(siteApi.subtitlePopupSelector);
   const popupWrapperEl = document.querySelector<HTMLElement>(
     `.${subPopupWrapperClassName}`,
@@ -133,7 +137,7 @@ function playVideo() {
 
 function translateWord(el: HTMLElement, popupEl: HTMLElement) {
   const word = el.dataset['word'] ?? el.innerText;
-  const language = targetLang; // Assuming targetLang is already defined
+  const language = sourceLang; // Assuming sourceLang is already defined
 
   translate(word, language)
     .then((translation) => {
@@ -146,7 +150,7 @@ function translateWord(el: HTMLElement, popupEl: HTMLElement) {
           root: 'unknown',
           translation: 'Translation not available.',
         },
-      hideTranslationPopup);
+          hideTranslationPopup);
       }
     })
     .catch((error) => {
@@ -173,29 +177,33 @@ function sendPopupViewedMessage(isHidden: boolean) {
 
 // Observe subtitles change on a page and replace text nodes with hidden words
 // or with just custom nodes to make translation on mouseover easier
-fetchWords("italian").then((words) => {
-  console.log("italian", words)
+fetchWords("spanish").then((words) => {
+
+  const wordsArray = Array.from(words);
+  console.log(wordsArray);
+  // storeWords(wordsArray, "spanish")
+
   if (siteApi.subtitleTransformType === 'mask') {
 
-  startTextMutationObserver({
-    containerSelector: siteApi.subtitleSelector,
-    onTextAdded(textNode) {
-      addWordMasks(textNode, words)
-    },
-    onTextRemoved: removeWordMasks,
-    onTextChanged(textNode) {
-      removeWordMasks(textNode);
-      addWordMasks(textNode, words);
-    },
-  });
-} else {
-  startTextMutationObserver({
-    containerSelector: siteApi.subtitleSelector,
-    onTextAdded(textNode) {
-      wrapWordsInTextElement(textNode, words);
-    },
-  });
-}
+    startTextMutationObserver({
+      containerSelector: siteApi.subtitleSelector,
+      onTextAdded(textNode) {
+        addWordMasks(textNode, words)
+      },
+      onTextRemoved: removeWordMasks,
+      onTextChanged(textNode) {
+        removeWordMasks(textNode);
+        addWordMasks(textNode, words);
+      },
+    });
+  } else {
+    startTextMutationObserver({
+      containerSelector: siteApi.subtitleSelector,
+      onTextAdded(textNode) {
+        wrapWordsInTextElement(textNode, words);
+      },
+    });
+  }
 })
 
 
@@ -204,7 +212,6 @@ function onWordLeaveHandler(el: HTMLElement) {
   el.classList.remove(subWordReveal);
   lastHoveredElement = null;
   lastTranslationPopup = null;
-  cancelTranslate();
   playVideo();
 }
 // Show/hide the popup with translation on mousehover of a word in the subtitles.
@@ -216,7 +223,7 @@ addMouseEnterLeaveEventListeners({
   onEnter: (el: HTMLElement) => {
     sendPopupViewedMessage(
       el.classList.contains(subWordHiddenClassName) ||
-        el.classList.contains(subWordMaskClassName),
+      el.classList.contains(subWordMaskClassName),
     );
     el.classList.add(subWordReveal);
     const containerEl = document.querySelector<HTMLElement>(

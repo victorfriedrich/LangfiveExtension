@@ -64,7 +64,7 @@ export function getWordMaskHTML(targetElementRect, wordMask) {
       class="${subWordMaskClassName} ${isHidden ? subWordMaskHiddenClassName : ''}"
       data-word="${word}" 
       style=" 
-        top: ${rect.top - targetElementRect.top + 2}px;
+        top: ${rect.top - targetElementRect.top + 1}px;
         left: ${rect.left - targetElementRect.left}px;  
         width: ${rect.width}px; 
         height: ${rect.height - 2}px;

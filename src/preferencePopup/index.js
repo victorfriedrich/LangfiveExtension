@@ -3,11 +3,11 @@ import tokens from '../textProcessing/tokens.json';
 import { languages } from './languages';
 import { getPrefs, setPrefs } from './prefs';
 import { supabase } from '../supabaseclient';
-const emailEl = document.querySelector('#mail');
+const emailEl = document.querySelector('#authinfo');
 const versionEl = document.querySelector('#version');
 const commonWordsRangeInputEl = document.querySelector('.commonWordsRangeInput');
 const sourceLangSelectEl = document.querySelector('.sourceLangSelect');
-const targetLangSelectEl = document.querySelector('.targetLangSelect');
+const targetLangSelectEl = document.querySelector('.sourceLangSelect');
 const hideWordsInputEl = document.querySelector('.commonWordsInput');
 const hideWordsSectionEl = document.querySelector('.hideWordsSection');
 const contractionsWordsInputEl = document.querySelector('.contractionsWordsInput');
@@ -29,12 +29,13 @@ const logoutButton = document.getElementById('logout-button');
 function updateAuthUI(session) {
     if (session) {
         console.log(session);
-        emailEl.innerHTML = `${session.user.email}`;
+        emailEl.innerHTML = `Signed in as ${session.user.email}`;
         loginSection.classList.remove('active');
         logoutSection.classList.add('active');
         // Optionally, display user info
     }
     else {
+        emailEl.innerHTML = 'Sign in to get started';
         logoutSection.classList.remove('active');
         loginSection.classList.add('active');
     }
@@ -149,6 +150,7 @@ const prefsState = {
     },
 };
 function applyPrefs() {
+    console.log("Fetching prefs");
     getPrefs((storagePrefs) => {
         prefsState.targetLang = storagePrefs.targetLang;
         prefsState.sourceLang = storagePrefs.sourceLang;
@@ -168,6 +170,7 @@ function sendPrefsUpdate() {
     });
 }
 function savePrefs() {
+    console.log("Saving prefs");
     setPrefs(prefsState, sendPrefsUpdate);
 }
 function addLanguages() {

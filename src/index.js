@@ -1,5 +1,5 @@
 import { wrapNodeWords, maskTextWords, } from './textProcessing/wrapNodeWords';
-import { translate, cancelTranslate } from './translate';
+import { translate } from './translate';
 import { insertTranslationPopup, insertTranslationResult, hideTranslationPopup, } from './translationPopup';
 import { defaultPrefs } from './preferencePopup/prefs';
 import { subWordClassName, subContainerClassName, subWordReveal, getSubtitlesWordHTML, getSubtitlesHiddenWordHTML, subPopupWrapperClassName, getWordMaskHTML, subWordMaskClassName, getWordWrapperHTML, subWordHiddenClassName, } from './markup';
@@ -60,6 +60,9 @@ function removeWordMasks(textNode) {
 }
 function adjustTranslationPopupPosition() {
     var _a;
+    if (!siteApi.subtitlePopupSelector || siteApi.subtitlePopupSelector.trim() === '') {
+        return;
+    }
     const containerEl = document.querySelector(siteApi.subtitlePopupSelector);
     const popupWrapperEl = document.querySelector(`.${subPopupWrapperClassName}`);
     if (!containerEl ||
@@ -84,7 +87,7 @@ function playVideo() {
 function translateWord(el, popupEl) {
     var _a;
     const word = (_a = el.dataset['word']) !== null && _a !== void 0 ? _a : el.innerText;
-    const language = targetLang; // Assuming targetLang is already defined
+    const language = sourceLang; // Assuming sourceLang is already defined
     translate(word, language)
         .then((translation) => {
         if (translation) {
@@ -119,8 +122,10 @@ function sendPopupViewedMessage(isHidden) {
 }
 // Observe subtitles change on a page and replace text nodes with hidden words
 // or with just custom nodes to make translation on mouseover easier
-fetchWords("italian").then((words) => {
-    console.log("italian", words);
+fetchWords("spanish").then((words) => {
+    const wordsArray = Array.from(words);
+    console.log(wordsArray);
+    // storeWords(wordsArray, "spanish")
     if (siteApi.subtitleTransformType === 'mask') {
         startTextMutationObserver({
             containerSelector: siteApi.subtitleSelector,
@@ -148,7 +153,6 @@ function onWordLeaveHandler(el) {
     el.classList.remove(subWordReveal);
     lastHoveredElement = null;
     lastTranslationPopup = null;
-    cancelTranslate();
     playVideo();
 }
 // Show/hide the popup with translation on mousehover of a word in the subtitles.

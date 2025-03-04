@@ -33,7 +33,9 @@
     li {
       padding-bottom: 4px;
     }
-
+    .commonWordsInput {
+      display: hidden;
+    }
     .hideWordsSection {
       height: 0;
       opacity: 0;
@@ -83,23 +85,24 @@
 </head>
 <body>
   <h2>Langfive</h2>
-  <p>Signed in as <span id="mail"></span></p>
+  <p id="authinfo">Sign in with Langfive to get started</p>
   <sub id="version" style="color: gray;position: absolute;right: 0.5rem;top: 0.5rem;"></sub>
   <div class="tabs">
     <button class="tab" name="description">Description 💬</button>
-    <button class="tab" name="settings">Settings ⚙️</button>
+    <button class="tab" id="settings-link" name="settings">Settings ⚙️</button>
   </div>
 
   <div class="tab-content" data-name="description">
     <p style="font-size: 1.2em">
-      Directly integrate Langfive with <b>Netflix</b>, <b>Amazon Prime Video</b> or <b>YouTube</b>. Hover over a word to see its translation and add it to your flashcards.
+      Directly use Langfive in <b>YouTube</b>, <b>Netflix</b>, or <b>Amazon Prime Video</b>. Hover over a word to see its translation and add it to your flashcards.
+      Subtitles are orange for new words.
     </p>
     <img src="../../images/demo.webp" alt="demo" style="width: 100%; height: auto;">
   </div>
 
   <div class="tab-content" data-name="settings">
     <p>
-      <span>Translate from</span><select class="sourceLangSelect"></select><span>to</span><select class="targetLangSelect"></select>
+      <span>Translate from</span><select class="sourceLangSelect"></select>
     </p>
     <p>
       <label>

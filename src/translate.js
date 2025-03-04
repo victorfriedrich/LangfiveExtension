@@ -24,8 +24,4 @@ export async function translate(word, language) {
         return null;
     }
 }
-export function cancelTranslate() {
-    // Since we're using backend API, there's no need for abort controllers here.
-    // However, if you implement request cancellation, you can add it here.
-}
 //# sourceMappingURL=translate.js.map

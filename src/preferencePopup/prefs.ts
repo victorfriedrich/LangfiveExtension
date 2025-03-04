@@ -2,7 +2,7 @@ import { logPrefix } from '../utils';
 import { Language } from './languages';
 
 export const defaultPrefs: Prefs = {
-  sourceLang: 'en',
+  sourceLang: 'it',
   targetLang: 'es',
   hideWords: false,
   hideType: 'most-common',
@@ -58,7 +58,6 @@ export function setPrefs(prefs: Prefs, callback: () => void) {
       hideType: prefs.hideType,
     },
     () => {
-      console.log(logPrefix, 'Settings saved');
       callback();
     },
   );

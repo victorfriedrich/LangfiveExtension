@@ -2,42 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Authenticate</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    .container {
-      max-width: 400px;
-      margin: auto;
-    }
-    input[type="email"] {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      box-sizing: border-box;
-    }
-    button {
-      padding: 10px 20px;
-    }
-    .message {
-      margin-top: 20px;
-      color: green;
-    }
-    .error {
-      margin-top: 20px;
-      color: red;
-    }
-  </style>
+  <title>Welcome Back - Login</title>
+  <link rel="stylesheet" href="auth.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+  <div class="background-overlay"></div>
   <div class="container">
-    <h2>Login to Langfive</h2>
-    <input type="email" id="email" placeholder="Enter your email" required />
-    <button id="login-btn">Send Login Link</button>
-    <div id="message" class="message"></div>
-    <div id="error" class="error"></div>
+    <div class="login-box">
+      <div class="header">
+        <h1>Welcome Back!</h1>
+        <p>Already signed up on Langfive? Log in here.</p>
+      </div>
+      
+      <form id="login-form" class="login-form">
+        <div class="input-group">
+          <input 
+            type="email" 
+            id="email" 
+            required 
+            placeholder="Enter your email address"
+            autocomplete="email"
+          >
+          <button type="submit" id="login-btn">
+            <span class="button-content">
+              <span class="button-text">Login</span>
+              <i class="fa-solid fa-paper-plane"></i>
+            </span>
+            <span class="loading-content">
+              <i class="fa-solid fa-circle-notch fa-spin"></i>
+              <span>Retry (<span id="timer">60</span>s)</span>
+            </span>
+          </button>
+        </div>
+      </form>
+
+      <div id="mail-prompt" class="mail-prompt hidden">
+        <button id="open-mail">Open Mail</button>
+      </div>
+    </div>
   </div>
 
   <script src="auth.js" type="module"></script>

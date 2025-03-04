@@ -2,6 +2,11 @@ import { getPrefs } from './preferencePopup/prefs';
 import { supabase, ensureSupabaseSession } from './supabaseclient';
 import { injectCss, injectJs } from './utils';
 import { Language } from './preferencePopup/languages';
+import { Readability } from '@mozilla/readability';
+
+import { fetchWords } from './fetchWords';
+import { storeWords } from './wordstorage';
+
 
 let prefs: Prefs | null = null;
 
@@ -24,7 +29,7 @@ function sendCurrentPrefsToInjectedScripts(): void {
 }
 
 function determineLanguage(prefs: Prefs): string {
-  if(!prefs)
+  if (!prefs)
     return "spanish";
 
   switch (prefs.sourceLang) {
@@ -35,7 +40,7 @@ function determineLanguage(prefs: Prefs): string {
     case "de":
       return "german";
   }
-  
+
   return "spanish";
 }
 
@@ -43,22 +48,55 @@ injectCss('src/index.css');
 injectCss('src/spinner.css');
 injectJs('src/index.js').then(sendCurrentPrefsToInjectedScripts);
 
+
 function checkForYouTubePage() {
   if (window.location.hostname === 'www.youtube.com' && window.location.pathname === '/watch') {
     const lang = determineLanguage(prefs!);
     chrome.storage.local.get(['supabaseSession'], async (result) => {
+      console.log(result);
       try {
         await ensureSupabaseSession(result.supabaseSession);
+
+        chrome.storage.local.get(`knownWords_${lang}`, (result) => {
+          const words = result[`knownWords_${lang}`] || [];
+          if (words.length <= 0) {
+            fetchWords(lang).then((words) => {
+  
+              const wordsArray = Array.from(words);
+              console.log(wordsArray);
+              storeWords(wordsArray, lang)
+  
+            })
+          }
+        });
       } catch (error) {
         console.log("Error adding word")
       }
+
     });
-    
+
   }
 }
 
 // Run on page load
 window.addEventListener('load', checkForYouTubePage);
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'EXTRACT_ARTICLE') {
+    try {
+      // Clone the document so that we do not modify the live page
+      const docClone = document.cloneNode(true) as Document;
+      const reader = new Readability(docClone);
+      const article = reader.parse();
+      sendResponse({ article });
+    } catch (error) {
+      console.error('Error extracting article:', error);
+      sendResponse({ error: error.message });
+    }
+    // Return true to indicate asynchronous response if needed
+    return true;
+  }
+});
 
 window.addEventListener("logout", (event) => {
   chrome.storage.local.remove('supabaseSession', () => {
@@ -72,7 +110,7 @@ window.addEventListener("logout", (event) => {
 
 window.addEventListener("message", (event) => {
   // Check if the message is from the expected source
-  if (event.source !== window || event.data.source !== "translationPopup") {
+  if (event.data.source !== "translationPopup") {
     return;
   }
 

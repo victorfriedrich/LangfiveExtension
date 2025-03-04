@@ -12,9 +12,8 @@ export async function fetchWords(targetLanguage: string, pageSize = 1000): Promi
     const allWords = new Set();
     let offset = 0;
     let hasMore = true;
-
+    
     try {
-        console.log("Fetching session...", await supabase.auth.getSession());
 
         while (hasMore) {
             // Fetch a page of known words using the paginated RPC call

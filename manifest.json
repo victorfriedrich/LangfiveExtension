@@ -14,6 +14,16 @@
     },
     "default_popup": "src/preferencePopup/index.html"
   },
+  "commands": {
+    "toggle-reader": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Open the reader view for the current page"
+    }
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtBks9ZCIHDdql0T93XU20UouN8ZoeEQx3tfaw4MWWOkKQIUQG01pKERcCKziY4AT5nxoABpgBpTJhox3uIFwLSubPTfX9f6JYq2pBYJjGXTsMGnbu7xIzXLTlGKj6NrL5uXAYTAXQYrvmGsS93r49jtvcC8S8r8XMu2KAkHrK0AR5UaqNSX5KLJTs9nsZmKxnOVT2fhF+Nh2IuQdEnWJGEB3lMfbI9RVDhsYz9T8IPmFZUUv0XFz6EfqmB49g8mE0ttyHRn+BngbLo/jg8MLk7zuYq/GctpffFWmpNLw+x0+eT0TKfzWAi+mHcgwvVBMTxwkJnSzj5PclL64GT7t9QIDAQAB",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -21,36 +31,53 @@
     "128": "icons/icon128.png",
     "1024": "icons/icon1024.png"
   },
-  "content_scripts": [{
-    "matches": [
-      "*://*.netflix.com/*",
-      "*://*.kino.pub/*",
-      "*://*.youtube.com/*",
-      "*://*.primevideo.com/*",
-      "http://localhost:3000/*"
-    ],
-    "js": ["src/contentScript.js"]
-  }],
-  "web_accessible_resources": [{
-    "resources": [
-      "src/index.js",
-      "src/index.css",
-      "src/spinner.css",
-      "images/demo.webp",
-      "src/auth_handler.html",
-      "src/auth_handler.js",
-      "src/auth.html",
-      "src/auth.js"
-    ],
-    "matches": ["<all_urls>"]
-  }],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "src/contentScript.js"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/index.js",
+        "src/index.css",
+        "src/spinner.css",
+        "images/demo.webp",
+        "src/auth_handler.html",
+        "src/auth_handler.js",
+        "src/auth.html",
+        "src/auth.js",
+        "src/contentScript.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    },
+    {
+      "resources": [
+        "src/reader.html",
+        "src/reader.js",
+        "src/reader.css"
+      ],
+      "matches": [
+        "chrome-extension://*/*"
+      ]
+    }
+  ],
   "host_permissions": [
     "https://www.netflix.com/*",
     "https://www.youtube.com/*",
     "https://www.primevideo.com/*",
-    "http://localhost:3000/*"
+    "http://localhost:3000/*",
+    "<all_urls>"
   ],
   "permissions": [
+    "scripting",
     "storage",
     "identity"
   ]

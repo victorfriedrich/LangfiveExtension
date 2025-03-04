@@ -1,48 +1,110 @@
-var _a;
 import { createClient } from '@supabase/supabase-js';
-// Initialize Supabase client
 const supabase = createClient(process.env.REACT_APP_SUPABASE_URL, process.env.REACT_APP_SUPABASE_ANON_KEY);
-export const extensionSupabaseMagicLink = async (email) => {
-    try {
-        const { error } = await supabase.auth.signInWithOtp({
-            email: email,
-            options: {
-                emailRedirectTo: chrome.runtime.getURL("src/auth_handler.html")
+class LoginForm {
+    constructor() {
+        this.retryTimer = 60;
+        this.timerInterval = null;
+        this.form = document.getElementById('login-form');
+        this.emailInput = document.getElementById('email');
+        this.submitButton = document.getElementById('login-btn');
+        this.mailPrompt = document.getElementById('mail-prompt');
+        this.timerSpan = document.getElementById('timer');
+        window.addEventListener('message', (event) => {
+            if (event.data === 'auth_success') {
+                window.close();
             }
         });
-        if (error) {
-            console.error('Error sending magic link:', error.message);
-            return false;
+        this.initializeEventListeners();
+    }
+    initializeEventListeners() {
+        var _a;
+        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+        (_a = document.getElementById('open-mail')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => this.openMail());
+    }
+    async handleSubmit(e) {
+        e.preventDefault();
+        const email = this.emailInput.value.trim();
+        if (!email) {
+            alert('Please enter a valid email');
+            return;
         }
-        console.log('Magic link sent successfully v2');
-        return true;
-    }
-    catch (error) {
-        console.error('Unexpected error:', error);
-        return false;
-    }
-};
-// Assuming you have an input field with id 'email-input'
-(_a = document.getElementById('login-btn')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', async () => {
-    const emailInput = document.getElementById('email');
-    const email = emailInput.value.trim();
-    if (email) {
-        const success = await extensionSupabaseMagicLink(email);
-        if (success) {
-            // You might want to show a message to the user here
-            console.log('Please check your email for the magic link');
+        this.setLoading(true);
+        try {
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    emailRedirectTo: chrome.runtime.getURL("src/auth_handler.html")
+                }
+            });
+            if (error)
+                throw error;
+            this.mailPrompt.classList.remove('hidden');
+            this.startRetryTimer();
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                alert(error.message);
+            }
+            else {
+                alert('An unexpected error occurred');
+            }
+            this.setLoading(false);
         }
     }
-    else {
-        console.error('Please enter a valid email');
+    setLoading(loading) {
+        this.submitButton.disabled = loading;
+        if (loading) {
+            this.submitButton.classList.add('loading');
+        }
+        else {
+            this.submitButton.classList.remove('loading');
+        }
     }
+    startRetryTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+        this.retryTimer = 60;
+        this.updateTimerDisplay();
+        this.timerInterval = window.setInterval(() => {
+            this.retryTimer--;
+            this.updateTimerDisplay();
+            if (this.retryTimer <= 0) {
+                this.stopRetryTimer();
+            }
+        }, 1000);
+    }
+    stopRetryTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+        this.setLoading(false);
+        this.mailPrompt.classList.add('hidden');
+    }
+    updateTimerDisplay() {
+        this.timerSpan.textContent = this.retryTimer.toString();
+    }
+    openMail() {
+        const emailProvider = this.emailInput.value.split('@')[1];
+        if (emailProvider === 'gmail.com') {
+            window.open('https://mail.google.com', '_blank');
+        }
+        else {
+            window.open('mailto:', '_blank');
+        }
+    }
+}
+// Initialize the form when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new LoginForm();
 });
-// You might want to add this function to check the auth state when your extension loads
+// Check auth state when extension loads
 export const checkAuthState = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
         console.log('User is signed in:', session.user);
-        // Handle signed-in state (e.g., update UI)
+        // Handle signed-in state
     }
     else {
         console.log('No user signed in');

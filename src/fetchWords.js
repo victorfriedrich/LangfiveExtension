@@ -11,7 +11,6 @@ export async function fetchWords(targetLanguage, pageSize = 1000) {
     let offset = 0;
     let hasMore = true;
     try {
-        console.log("Fetching session...", await supabase.auth.getSession());
         while (hasMore) {
             // Fetch a page of known words using the paginated RPC call
             const { data, error } = await supabase.rpc('get_known_words', {

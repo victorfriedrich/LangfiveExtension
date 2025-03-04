@@ -49,7 +49,3 @@ export async function translate(
   }
 }
 
-export function cancelTranslate(): void {
-  // Since we're using backend API, there's no need for abort controllers here.
-  // However, if you implement request cancellation, you can add it here.
-}
