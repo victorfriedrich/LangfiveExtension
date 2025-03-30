@@ -607,3 +607,52 @@ body {
     font-weight: bold;
   }
   
+  /* Link styles */
+a {
+    color: #8B4513;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(139, 69, 19, 0.3);
+    transition: color 0.2s, border-bottom 0.2s;
+  }
+  
+  a:hover {
+    color: #7a3c10;
+    border-bottom: 1px solid rgba(139, 69, 19, 0.7);
+  }
+  
+  a:active {
+    color: #6d3810;
+  }
+  
+  /* Dark theme link adjustments */
+  body.theme-dark a {
+    color: #e0a87d;
+    border-bottom: 1px solid rgba(224, 168, 125, 0.3);
+  }
+  
+  body.theme-dark a:hover {
+    color: #d09b70;
+    border-bottom: 1px solid rgba(224, 168, 125, 0.7);
+  }
+  
+  body.theme-dark a:active {
+    color: #c08e63;
+  }
+  
+  /* Sepia theme link adjustments */
+  body.theme-sepia a {
+    color: #85410f;
+    border-bottom: 1px solid rgba(133, 65, 15, 0.3);
+  }
+  
+  body.theme-sepia a:hover {
+    color: #73380d;
+    border-bottom: 1px solid rgba(133, 65, 15, 0.7);
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1em 0;
+  }

@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Split text into groups of word and non-word characters, mark unknown words.
 function groupText(text, knownWordsSet) {
   if (!text) return [];
-  const SPECIAL_CHARS = ".,!?¿¡'\"1234567890()«»%: -_[]{}#@$&*+=|\\<>/~`^""…;";
+  const SPECIAL_CHARS = ".,!?¿¡'\"1234567890()«»%: -_[]{}#@$&*+=|\\<>/~`^""…;”“";
   let result = [];
   let currentGroup = "";
   let currentIsSpecial = null;
@@ -129,8 +129,10 @@ function processTextNodes(container, knownWordsSet) {
       if (group.isWord) {
         const span = document.createElement('span');
         span.className = 'word' + (group.unknown ? ' unknown-word' : '');
-        span.textContent = group.content;
-        frag.appendChild(span);
+        if (group.content.trim().length > 0) {
+          span.textContent = group.content;
+          frag.appendChild(span);
+        }
       } else {
         frag.appendChild(document.createTextNode(group.content));
       }
