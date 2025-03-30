@@ -1,4 +1,5 @@
 var _a;
+import { __awaiter } from "tslib";
 import tokens from '../textProcessing/tokens.json';
 import { languages } from './languages';
 import { getPrefs, setPrefs } from './prefs';
@@ -55,8 +56,8 @@ loginButton.addEventListener('click', () => {
     chrome.tabs.create({ url: authUrl });
 });
 // Handle logout button click
-logoutButton.addEventListener('click', async () => {
-    const { error } = await supabase.auth.signOut();
+logoutButton.addEventListener('click', () => __awaiter(void 0, void 0, void 0, function* () {
+    const { error } = yield supabase.auth.signOut();
     const logoutEvent = new CustomEvent("logout", {
         detail: {
             reason: 'user_initiated',
@@ -70,7 +71,7 @@ logoutButton.addEventListener('click', async () => {
     else {
         console.log('User signed out.');
     }
-});
+}));
 const prefsState = {
     get targetLang() {
         return this._targetLang;

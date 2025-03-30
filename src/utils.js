@@ -1,3 +1,4 @@
+import { __awaiter } from "tslib";
 import { popupHeight, popupVerticalOffset, popupWidth } from './markup';
 import debounce from 'lodash-es/debounce';
 export const logPrefix = 'Langfive ';
@@ -23,15 +24,17 @@ export function injectCss(path) {
     link.rel = 'stylesheet';
     document.getElementsByTagName('head')[0].appendChild(link);
 }
-export async function injectJs(path) {
-    return new Promise((resolve) => {
-        const s = document.createElement('script');
-        s.src = chrome.runtime.getURL(path);
-        s.onload = function () {
-            this.remove();
-            resolve();
-        };
-        (document.head || document.documentElement).appendChild(s);
+export function injectJs(path) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve) => {
+            const s = document.createElement('script');
+            s.src = chrome.runtime.getURL(path);
+            s.onload = function () {
+                this.remove();
+                resolve();
+            };
+            (document.head || document.documentElement).appendChild(s);
+        });
     });
 }
 export function fetchTextNodes(node) {

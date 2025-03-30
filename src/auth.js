@@ -1,3 +1,4 @@
+import { __awaiter } from "tslib";
 import { createClient } from '@supabase/supabase-js';
 const supabase = createClient(process.env.REACT_APP_SUPABASE_URL, process.env.REACT_APP_SUPABASE_ANON_KEY);
 class LoginForm {
@@ -21,35 +22,37 @@ class LoginForm {
         this.form.addEventListener('submit', (e) => this.handleSubmit(e));
         (_a = document.getElementById('open-mail')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => this.openMail());
     }
-    async handleSubmit(e) {
-        e.preventDefault();
-        const email = this.emailInput.value.trim();
-        if (!email) {
-            alert('Please enter a valid email');
-            return;
-        }
-        this.setLoading(true);
-        try {
-            const { error } = await supabase.auth.signInWithOtp({
-                email,
-                options: {
-                    emailRedirectTo: chrome.runtime.getURL("src/auth_handler.html")
+    handleSubmit(e) {
+        return __awaiter(this, void 0, void 0, function* () {
+            e.preventDefault();
+            const email = this.emailInput.value.trim();
+            if (!email) {
+                alert('Please enter a valid email');
+                return;
+            }
+            this.setLoading(true);
+            try {
+                const { error } = yield supabase.auth.signInWithOtp({
+                    email,
+                    options: {
+                        emailRedirectTo: chrome.runtime.getURL("src/auth_handler.html")
+                    }
+                });
+                if (error)
+                    throw error;
+                this.mailPrompt.classList.remove('hidden');
+                this.startRetryTimer();
+            }
+            catch (error) {
+                if (error instanceof Error) {
+                    alert(error.message);
                 }
-            });
-            if (error)
-                throw error;
-            this.mailPrompt.classList.remove('hidden');
-            this.startRetryTimer();
-        }
-        catch (error) {
-            if (error instanceof Error) {
-                alert(error.message);
+                else {
+                    alert('An unexpected error occurred');
+                }
+                this.setLoading(false);
             }
-            else {
-                alert('An unexpected error occurred');
-            }
-            this.setLoading(false);
-        }
+        });
     }
     setLoading(loading) {
         this.submitButton.disabled = loading;
@@ -100,8 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
     new LoginForm();
 });
 // Check auth state when extension loads
-export const checkAuthState = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+export const checkAuthState = () => __awaiter(void 0, void 0, void 0, function* () {
+    const { data: { session } } = yield supabase.auth.getSession();
     if (session) {
         console.log('User is signed in:', session.user);
         // Handle signed-in state
@@ -110,5 +113,5 @@ export const checkAuthState = async () => {
         console.log('No user signed in');
         // Handle signed-out state
     }
-};
+});
 //# sourceMappingURL=auth.js.map

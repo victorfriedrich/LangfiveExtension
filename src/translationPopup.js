@@ -1,3 +1,4 @@
+import { __awaiter } from "tslib";
 import { getPopupHTML, getTranslationHTML, subLoadingClassName, subPopupClassName, subPopupWrapperClassName, } from './markup';
 // @ts-ignore
 import styles from 'bundle-text:./translationPopup.css';
@@ -30,7 +31,7 @@ export function insertTranslationResult(translationPopupEl, translations, hideTr
     loaderEl === null || loaderEl === void 0 ? void 0 : loaderEl.remove();
     // Attach event listeners to the new buttons
     translationPopupEl.querySelectorAll('.sub-tr-plus-button').forEach(button => {
-        button.addEventListener('click', async () => {
+        button.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
             const wordId = button.getAttribute('data-id');
             if (wordId) {
                 hideTranslationPopup();
@@ -39,7 +40,7 @@ export function insertTranslationResult(translationPopupEl, translations, hideTr
             else {
                 console.error('No word ID found');
             }
-        });
+        }));
     });
 }
 export function hideTranslationPopup() {

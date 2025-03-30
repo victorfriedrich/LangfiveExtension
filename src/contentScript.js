@@ -1,3 +1,4 @@
+import { __awaiter } from "tslib";
 import { getPrefs } from './preferencePopup/prefs';
 import { supabase, ensureSupabaseSession } from './supabaseclient';
 import { injectCss, injectJs } from './utils';
@@ -31,10 +32,10 @@ injectJs('src/index.js').then(sendCurrentPrefsToInjectedScripts);
 function checkForYouTubePage() {
     if (window.location.hostname === 'www.youtube.com' && window.location.pathname === '/watch') {
         const lang = determineLanguage(prefs);
-        chrome.storage.local.get(['supabaseSession'], async (result) => {
+        chrome.storage.local.get(['supabaseSession'], (result) => __awaiter(this, void 0, void 0, function* () {
             console.log(result);
             try {
-                await ensureSupabaseSession(result.supabaseSession);
+                yield ensureSupabaseSession(result.supabaseSession);
                 chrome.storage.local.get(`knownWords_${lang}`, (result) => {
                     const words = result[`knownWords_${lang}`] || [];
                     if (words.length <= 0) {
@@ -49,7 +50,7 @@ function checkForYouTubePage() {
             catch (error) {
                 console.log("Error adding word");
             }
-        });
+        }));
     }
 }
 // Run on page load
@@ -89,15 +90,15 @@ window.addEventListener("message", (event) => {
     const { wordId } = event.data.payload;
     if (wordId) {
         console.log("Received from translationPopup:", wordId);
-        chrome.storage.local.get(['supabaseSession'], async (result) => {
+        chrome.storage.local.get(['supabaseSession'], (result) => __awaiter(void 0, void 0, void 0, function* () {
             try {
-                await ensureSupabaseSession(result.supabaseSession);
+                yield ensureSupabaseSession(result.supabaseSession);
                 addWordToUserwords(wordId);
             }
             catch (error) {
                 console.log("Error adding word");
             }
-        });
+        }));
         // Now you can handle the session and wordId within the content script
         // For example, store session or make further actions
     }
@@ -105,21 +106,23 @@ window.addEventListener("message", (event) => {
         console.error("Invalid data received:", event.data.payload);
     }
 });
-async function addWordToUserwords(wordId) {
-    try {
-        console.log(supabase.auth.getSession());
-        const { data, error } = await supabase.rpc('move_words_to_userwords', {
-            _word_ids: [wordId]
-        });
-        if (error) {
-            console.error('Supabase error:', error);
-            throw error;
+function addWordToUserwords(wordId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log(supabase.auth.getSession());
+            const { data, error } = yield supabase.rpc('move_words_to_userwords', {
+                _word_ids: [wordId]
+            });
+            if (error) {
+                console.error('Supabase error:', error);
+                throw error;
+            }
+            return data;
         }
-        return data;
-    }
-    catch (err) {
-        console.error('Error adding words to userwords:', err);
-        throw err;
-    }
+        catch (err) {
+            console.error('Error adding words to userwords:', err);
+            throw err;
+        }
+    });
 }
 //# sourceMappingURL=contentScript.js.map

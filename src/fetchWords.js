@@ -1,3 +1,4 @@
+import { __awaiter } from "tslib";
 import { supabase } from "./supabaseclient";
 /**
  * Fetch all known words in a paginated manner and store them in a Set.
@@ -6,48 +7,50 @@ import { supabase } from "./supabaseclient";
  * @param {number} pageSize - Number of records to fetch per page.
  * @returns {Promise<Set<string>>} - A Promise that resolves to a Set of words.
  */
-export async function fetchWords(targetLanguage, pageSize = 1000) {
-    const allWords = new Set();
-    let offset = 0;
-    let hasMore = true;
-    try {
-        while (hasMore) {
-            // Fetch a page of known words using the paginated RPC call
-            const { data, error } = await supabase.rpc('get_known_words', {
-                _target_language: targetLanguage,
-                _limit: pageSize,
-                _offset: offset
-            });
-            if (error) {
-                console.error('Error fetching known words:', error);
-                throw error;
-            }
-            if (data && data.length > 0) {
-                // Add fetched words to the Set
-                // @ts-ignore
-                data.forEach(row => {
-                    if (row.word) {
-                        allWords.add(row.word);
-                    }
+export function fetchWords(targetLanguage_1) {
+    return __awaiter(this, arguments, void 0, function* (targetLanguage, pageSize = 1000) {
+        const allWords = new Set();
+        let offset = 0;
+        let hasMore = true;
+        try {
+            while (hasMore) {
+                // Fetch a page of known words using the paginated RPC call
+                const { data, error } = yield supabase.rpc('get_known_words', {
+                    _target_language: targetLanguage,
+                    _limit: pageSize,
+                    _offset: offset
                 });
-                // Prepare for next iteration
-                offset += pageSize;
-                // If fewer records than pageSize are returned, we've reached the last page
-                if (data.length < pageSize) {
+                if (error) {
+                    console.error('Error fetching known words:', error);
+                    throw error;
+                }
+                if (data && data.length > 0) {
+                    // Add fetched words to the Set
+                    // @ts-ignore
+                    data.forEach(row => {
+                        if (row.word) {
+                            allWords.add(row.word);
+                        }
+                    });
+                    // Prepare for next iteration
+                    offset += pageSize;
+                    // If fewer records than pageSize are returned, we've reached the last page
+                    if (data.length < pageSize) {
+                        hasMore = false;
+                    }
+                }
+                else {
+                    // No more data to fetch
                     hasMore = false;
                 }
             }
-            else {
-                // No more data to fetch
-                hasMore = false;
-            }
+            console.log(`Total words fetched: ${allWords.size}`);
+            return allWords;
         }
-        console.log(`Total words fetched: ${allWords.size}`);
-        return allWords;
-    }
-    catch (err) {
-        console.error('Error getting and setting known words:', err);
-        throw err;
-    }
+        catch (err) {
+            console.error('Error getting and setting known words:', err);
+            throw err;
+        }
+    });
 }
 //# sourceMappingURL=fetchWords.js.map
