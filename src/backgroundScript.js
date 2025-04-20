@@ -62,6 +62,33 @@ chrome.runtime.onMessage.addListener((msg) => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'GET_DEFAULT_LANGUAGE') {
+    chrome.storage.local.get('supabaseSession', async (result) => {
+      const session = result.supabaseSession;
+      if (!session || !session.access_token) {
+        console.warn('No Supabase session found in storage');
+        sendResponse({ language: 'es' }); // fallback
+        return;
+      }
+
+      // Temporarily inject session into Supabase (if needed)
+      await supabase.auth.setSession(session);
+
+      const { data, error } = await supabase.rpc('get_user_default_language');
+      if (error || !data) {
+        console.error('Supabase RPC error:', error);
+        sendResponse({ language: 'es' });
+      } else {
+        sendResponse({ language: data });
+      }
+    });
+
+    return true; // Keeps the response channel open
+  }
+});
+
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'AUTH_SUCCESS') {
     console.log('Received AUTH_SUCCESS message');
     

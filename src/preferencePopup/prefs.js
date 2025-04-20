@@ -1,45 +1,36 @@
+// Fallback if the backend call fails
 export const defaultPrefs = {
-    sourceLang: 'it',
-    targetLang: 'es',
-    hideWords: false,
-    hideType: 'most-common',
-    contractions: true,
-    informal: true,
-    wordCount: 100,
+    preferredLanguage: 'es'
 };
-export function getPrefs(callback) {
-    chrome.storage.sync.get([
-        'sourceLang',
-        'targetLang',
-        'contractions',
-        'wordCount',
-        'informal',
-        'hideWords',
-        'hideType',
-    ], (storagePrefs) => {
-        var _a, _b, _c, _d, _e, _f, _g;
-        callback({
-            sourceLang: (_a = storagePrefs.sourceLang) !== null && _a !== void 0 ? _a : defaultPrefs.sourceLang,
-            targetLang: (_b = storagePrefs.targetLang) !== null && _b !== void 0 ? _b : defaultPrefs.targetLang,
-            contractions: (_c = storagePrefs.contractions) !== null && _c !== void 0 ? _c : defaultPrefs.contractions,
-            wordCount: (_d = storagePrefs.wordCount) !== null && _d !== void 0 ? _d : defaultPrefs.wordCount,
-            informal: (_e = storagePrefs.informal) !== null && _e !== void 0 ? _e : defaultPrefs.informal,
-            hideWords: (_f = storagePrefs.hideWords) !== null && _f !== void 0 ? _f : defaultPrefs.hideWords,
-            hideType: (_g = storagePrefs.hideType) !== null && _g !== void 0 ? _g : defaultPrefs.hideType,
+function getBackendDefaultLanguage() {
+    return new Promise((resolve) => {
+        chrome.runtime.sendMessage({ type: 'GET_DEFAULT_LANGUAGE' }, (response) => {
+            if (chrome.runtime.lastError || !response || !response.language) {
+                console.warn('Could not fetch from background:', chrome.runtime.lastError);
+                resolve(defaultPrefs.preferredLanguage);
+            }
+            else {
+                resolve(response.language);
+            }
         });
     });
 }
-export function setPrefs(prefs, callback) {
-    chrome.storage.sync.set({
-        sourceLang: prefs.sourceLang,
-        targetLang: prefs.targetLang,
-        hideWords: prefs.hideWords,
-        contractions: prefs.contractions,
-        informal: prefs.informal,
-        wordCount: prefs.wordCount,
-        hideType: prefs.hideType,
-    }, () => {
-        callback();
+export function getPrefs(callback) {
+    chrome.storage.sync.get(['preferredLanguage'], (result) => {
+        if (result.preferredLanguage) {
+            callback({
+                preferredLanguage: result.preferredLanguage
+            });
+        }
+        else {
+            getBackendDefaultLanguage().then((preferredLanguage) => {
+                chrome.storage.sync.set({ preferredLanguage });
+                callback({ preferredLanguage });
+            });
+        }
     });
+}
+export function setPrefs(prefs, callback) {
+    chrome.storage.sync.set({ preferredLanguage: prefs.preferredLanguage }, callback);
 }
 //# sourceMappingURL=prefs.js.map

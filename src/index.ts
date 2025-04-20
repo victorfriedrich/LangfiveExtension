@@ -31,10 +31,10 @@ import addMouseEnterLeaveEventListeners, {
   positionElement,
 } from './utils';
 import { fetchWords } from './fetchWords';
+import { ViewPopupEvent } from './types'
 
 const siteApi = getSiteSpecificApi(location.host);
-let sourceLang = defaultPrefs.sourceLang;
-let targetLang = defaultPrefs.targetLang;
+let preferredLanguage = defaultPrefs.preferredLanguage;
 
 const subtitleMasks = new Map<Text, HTMLElement[]>();
 let lastHoveredElement: HTMLElement | null = null;
@@ -137,7 +137,7 @@ function playVideo() {
 
 function translateWord(el: HTMLElement, popupEl: HTMLElement) {
   const word = el.dataset['word'] ?? el.innerText;
-  const language = sourceLang; // Assuming sourceLang is already defined
+  const language = preferredLanguage; // Assuming sourceLang is already defined
 
   translate(word, language)
     .then((translation) => {
@@ -163,8 +163,7 @@ function sendPopupViewedMessage(isHidden: boolean) {
   document.dispatchEvent(
     new CustomEvent<ViewPopupEvent>('view-popup', {
       detail: {
-        sourceLang,
-        targetLang,
+        preferredLanguage,
         host: location.host,
         isHidden,
         theme: window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -258,8 +257,7 @@ document.addEventListener('prefs', (event: CustomEvent<Prefs>) => {
   //   true,
   //   new Set(["the", "short", "answer"])
   // );
-  sourceLang = prefs.sourceLang;
-  targetLang = prefs.targetLang;
+  preferredLanguage = prefs.preferredLanguage;
 
   console.log(logPrefix, 'prefs updated:', prefs);
 });

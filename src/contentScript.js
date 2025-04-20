@@ -22,7 +22,7 @@ function sendCurrentPrefsToInjectedScripts() {
  * Determines the language string used for known words based on user preferences.
  */
 function determineLanguage(prefs) {
-    switch (prefs.sourceLang) {
+    switch (prefs.preferredLanguage) {
         case 'es':
             return 'spanish';
         case 'it':

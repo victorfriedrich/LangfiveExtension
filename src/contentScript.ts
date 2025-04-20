@@ -7,13 +7,7 @@ import { fetchWords } from './fetchWords';
 import { storeWords } from './wordstorage';
 
 export type Prefs = {
-  sourceLang: Language;
-  targetLang: Language;
-  hideWords: boolean;
-  hideType: 'most-common' | 'all';
-  contractions: boolean;
-  informal: boolean;
-  wordCount: number;
+  preferredLanguage: Language;
 };
 
 let prefs: Prefs | null = null;
@@ -35,7 +29,7 @@ function sendCurrentPrefsToInjectedScripts(): void {
  * Determines the language string used for known words based on user preferences.
  */
 function determineLanguage(prefs: Prefs): string {
-  switch (prefs.sourceLang) {
+  switch (prefs.preferredLanguage) {
     case 'es':
       return 'spanish';
     case 'it':

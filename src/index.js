@@ -8,8 +8,7 @@ import { getSiteSpecificApi } from './siteApi';
 import addMouseEnterLeaveEventListeners, { createElementFromHTML, logPrefix, positionElement, } from './utils';
 import { fetchWords } from './fetchWords';
 const siteApi = getSiteSpecificApi(location.host);
-let sourceLang = defaultPrefs.sourceLang;
-let targetLang = defaultPrefs.targetLang;
+let preferredLanguage = defaultPrefs.preferredLanguage;
 const subtitleMasks = new Map();
 let lastHoveredElement = null;
 let lastTranslationPopup = null;
@@ -87,7 +86,7 @@ function playVideo() {
 function translateWord(el, popupEl) {
     var _a;
     const word = (_a = el.dataset['word']) !== null && _a !== void 0 ? _a : el.innerText;
-    const language = sourceLang; // Assuming sourceLang is already defined
+    const language = preferredLanguage; // Assuming sourceLang is already defined
     translate(word, language)
         .then((translation) => {
         if (translation) {
@@ -110,8 +109,7 @@ function translateWord(el, popupEl) {
 function sendPopupViewedMessage(isHidden) {
     document.dispatchEvent(new CustomEvent('view-popup', {
         detail: {
-            sourceLang,
-            targetLang,
+            preferredLanguage,
             host: location.host,
             isHidden,
             theme: window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -186,8 +184,7 @@ document.addEventListener('prefs', (event) => {
     //   true,
     //   new Set(["the", "short", "answer"])
     // );
-    sourceLang = prefs.sourceLang;
-    targetLang = prefs.targetLang;
+    preferredLanguage = prefs.preferredLanguage;
     console.log(logPrefix, 'prefs updated:', prefs);
 });
 setInterval(() => {

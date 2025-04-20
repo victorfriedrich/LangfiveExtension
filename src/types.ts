@@ -1,6 +1,7 @@
-type ViewPopupEvent = {
-  sourceLang: string;
-  targetLang: string;
+import { Language } from "./preferencePopup/languages";
+
+export type ViewPopupEvent = {
+  preferredLanguage: Language;
   host: string;
   isHidden: boolean;
   theme: 'dark' | 'light';
