@@ -3,27 +3,27 @@
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('reader-container');
   const language = "spanish";
-  
+
   if (!container) {
     console.error('Reader container not found.');
     return;
   }
-  
+
   // --- Load Article Content from Storage ---
   // Show a spinner while loading
   const spinnerElement = document.createElement('div');
   spinnerElement.className = 'spinner';
   spinnerElement.style.margin = '50px auto';
   container.appendChild(spinnerElement);
-  
+
   chrome.storage.local.get('currentArticle', (articleResult) => {
     if (spinnerElement.parentNode) spinnerElement.parentNode.removeChild(spinnerElement);
-    
+
     if (!articleResult.currentArticle) {
       container.innerHTML = '<p class="error">No article content available.</p>';
       return;
     }
-    
+
     // Clear the container and add title if available and not present in content
     container.innerHTML = '';
     if (articleResult.currentArticle.title) {
@@ -36,35 +36,70 @@ document.addEventListener('DOMContentLoaded', () => {
         container.appendChild(titleElement);
       }
     }
-    
+
     // Insert the article content
     const contentDiv = document.createElement('div');
     contentDiv.className = 'article-content';
     contentDiv.innerHTML = articleResult.currentArticle.content || '';
     container.appendChild(contentDiv);
-    
+
+    // Keep one reference so we can update highlights later
+    let currentKnownWords = new Set();
+
     // Process text nodes to wrap words
     chrome.storage.local.get(`knownWords_${language}`, (result) => {
       const words = result[`knownWords_${language}`] || [];
-      const knownWordsSet = new Set(words.map(w => w.toLowerCase()));
-      processTextNodes(contentDiv, knownWordsSet);
+      currentKnownWords = new Set(words.map(w => w.toLowerCase()));
+      processTextNodes(contentDiv, currentKnownWords);
+    });
+
+    // Listen for the moment the background script finishes writing known words
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local') return;
+      const key = `knownWords_${language}`;
+      if (!changes[key]) return;
+
+      // Build a fresh Set with the new data
+      currentKnownWords = new Set(
+        (changes[key].newValue || []).map((w) => w.toLowerCase())
+      );
+
+      // Walk every wrapped word once and update its state
+      contentDiv.querySelectorAll('span.word').forEach((span) => {
+        const unknown = !currentKnownWords.has(span.textContent.toLowerCase());
+        span.classList.toggle('unknown-word', unknown);
+      });
     });
   });
-  
+
   // --- Attach event handlers ---
-  
-  // Handle clicks for individual word popups
-  container.addEventListener('click', (e) => {
-    if (e.target.classList?.contains('word')) {
-      handleWordClick(e.target);
-    } else if (!e.target.closest('.word-popup')) {
+  container.addEventListener('click', e => {
+    if (!e.target.classList?.contains('word')) return;
+
+    // If it’s already active, close and bail out
+    if (e.target.classList.contains('word-active')) {
       closeWordPopups();
+      return;
     }
+
+    // Otherwise show a new popup
+    handleWordClick(e.target);
+
+    // Don’t let this bubble up and trigger the document listener below
+    e.stopPropagation();
   });
-  
+
+  // Handle clicks anywhere else to dismiss the popup
+  document.addEventListener('click', e => {
+    if (e.target.closest('.word-popup') || e.target.classList?.contains('word')) {
+      return;
+    }
+    closeWordPopups();
+  });
+
   // Install section translation functionality (text selection)
   setupSectionTranslation();
-  
+
   // --- Initialize Sidebar, Settings Panel, and Scroll Progress ---
   initSidebar();
   initSettingsPanel();
@@ -75,14 +110,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ====================== Text Processing Functions ======================
 
+const SPECIAL_CHARS =
+  ".,!?¿¡'\"1234567890()«»%: -_[]{}#@$&*+=|\\<>/~`^…;”“";
+
 // Split text into groups of word and non-word characters, mark unknown words.
 function groupText(text, knownWordsSet) {
   if (!text) return [];
-  const SPECIAL_CHARS = ".,!?¿¡'\"1234567890()«»%: -_[]{}#@$&*+=|\\<>/~`^""…;”“";
   let result = [];
   let currentGroup = "";
   let currentIsSpecial = null;
-  
+
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
     const isSpecial = SPECIAL_CHARS.indexOf(char) >= 0;
@@ -97,11 +134,11 @@ function groupText(text, knownWordsSet) {
       currentIsSpecial = isSpecial;
     }
   }
-  
+
   if (currentGroup !== "") {
     result.push({ content: currentGroup, isWord: !currentIsSpecial });
   }
-  
+
   return result.map(group => {
     if (group.isWord) {
       group.unknown = !knownWordsSet.has(group.content.toLowerCase());
@@ -121,7 +158,7 @@ function processTextNodes(container, knownWordsSet) {
       nodesToProcess.push(node);
     }
   }
-  
+
   nodesToProcess.forEach(node => {
     const groups = groupText(node.nodeValue, knownWordsSet);
     const frag = document.createDocumentFragment();
@@ -150,20 +187,20 @@ function processTextNodes(container, knownWordsSet) {
 function handleWordClick(wordElement) {
   closeWordPopups();
   if (!wordElement) return;
-  
+
   wordElement.classList.add('word-active');
-  
+
   // Create and show a loading popup for translation.
   const loadingPopup = createLoadingPopup();
   document.body.appendChild(loadingPopup);
   positionPopup(loadingPopup, wordElement);
-  
+
   // Fetch translation (assuming window.fetchTranslation is available, or it will use our API below)
   window.fetchTranslation(wordElement.textContent, 'es')
     .then(translation => {
       loadingPopup.classList.remove('show');
       setTimeout(() => loadingPopup.parentNode?.removeChild(loadingPopup), 300);
-      
+
       const popup = createWordPopup(wordElement.textContent, translation);
       document.body.appendChild(popup);
       positionPopup(popup, wordElement);
@@ -206,7 +243,7 @@ function createLoadingPopup() {
 function createWordPopup(wordText, translation) {
   const popup = document.createElement('div');
   popup.className = 'word-popup';
-  
+
   // Popup header with the word
   const header = document.createElement('div');
   header.className = 'popup-header';
@@ -218,7 +255,7 @@ function createWordPopup(wordText, translation) {
     header.appendChild(rootSpan);
   }
   popup.appendChild(header);
-  
+
   // Container for translations
   const translationsContainer = document.createElement('div');
   translationsContainer.className = 'translations-container';
@@ -233,7 +270,7 @@ function createWordPopup(wordText, translation) {
     translationsContainer.innerHTML = '<div class="translation">No translation available</div>';
   }
   popup.appendChild(translationsContainer);
-  
+
   // Button to add word to flashcards
   const flashcardBtn = document.createElement('button');
   flashcardBtn.className = 'flashcard-btn';
@@ -251,7 +288,7 @@ function createWordPopup(wordText, translation) {
     }, 300);
   });
   popup.appendChild(flashcardBtn);
-  
+
   return popup;
 }
 
@@ -262,7 +299,7 @@ function positionPopup(popup, referenceElement) {
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
   popup.style.top = `${rect.bottom + scrollTop + 10}px`;
   popup.style.left = `${rect.left}px`;
-  
+
   const viewportWidth = window.innerWidth;
   const popupRect = popup.getBoundingClientRect();
   if (popupRect.right > viewportWidth - 20) {
@@ -287,17 +324,17 @@ function closeWordPopups() {
 function setupSectionTranslation() {
   let currentPopupInfo = null;
   let justSelected = false;
-  
+
   function handleTextSelection(event) {
     if (event.target.closest('.dismissable-popup, .word-popup')) return;
     const selection = window.getSelection();
     if (!selection) return;
     const selectedText = selection.toString().trim();
     if (!selectedText || selectedText.split(/\s+/).length < 2) return;
-    
+
     justSelected = true;
     let position = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
-    
+
     if (selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
@@ -309,12 +346,12 @@ function setupSectionTranslation() {
       if (leftPos + popupWidth > viewportWidth - 20) leftPos = viewportWidth - popupWidth - 20;
       position = { top: `${rect.bottom + scrollTop + 10}px`, left: `${leftPos}px`, transform: 'none' };
     }
-    
+
     currentPopupInfo = { text: selectedText, position };
     showTranslationLoadingPopup();
     fetchTranslation(selectedText);
   }
-  
+
   function handleDocumentClick(event) {
     if (justSelected) { justSelected = false; return; }
     if (!event.target.closest('.dismissable-popup, .word-popup')) {
@@ -322,14 +359,14 @@ function setupSectionTranslation() {
       currentPopupInfo = null;
     }
   }
-  
+
   function removeTranslationPopups() {
     document.querySelectorAll('.dismissable-popup').forEach(popup => {
       popup.classList.remove('show');
       setTimeout(() => popup.remove(), 300);
     });
   }
-  
+
   function showTranslationLoadingPopup() {
     removeTranslationPopups();
     const popup = document.createElement('div');
@@ -349,7 +386,7 @@ function setupSectionTranslation() {
     document.body.appendChild(popup);
     setTimeout(() => popup.classList.add('show'), 10);
   }
-  
+
   function showTranslationPopup(translation) {
     const popupId = 'dismissable-popup-' + Date.now();
     const popup = document.createElement('div');
@@ -372,39 +409,39 @@ function setupSectionTranslation() {
       popup.classList.add('show');
     }, 5);
   }
-  
+
   function fetchTranslation(text) {
     fetch('https://major-wynny-victorfriedrich-7c04e8cd.koyeb.app/api/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ section: text, language: 'es' })
     })
-    .then(response => {
-      if (!response.ok) throw new Error(`Error ${response.status}`);
-      return response.text();
-    })
-    .then(rawText => {
-      let translationText = 'No translation available';
-      try {
-        const data = JSON.parse(rawText);
-        if (typeof data === 'string' && data.trim()) {
-          translationText = data;
-        } else if (data?.translation && typeof data.translation === 'string') {
-          translationText = data.translation;
-        } else if (typeof data === 'object') {
-          const stringProps = Object.values(data).filter(value => typeof value === 'string' && value.trim().length > 0);
-          if (stringProps.length > 0) translationText = stringProps[0];
+      .then(response => {
+        if (!response.ok) throw new Error(`Error ${response.status}`);
+        return response.text();
+      })
+      .then(rawText => {
+        let translationText = 'No translation available';
+        try {
+          const data = JSON.parse(rawText);
+          if (typeof data === 'string' && data.trim()) {
+            translationText = data;
+          } else if (data?.translation && typeof data.translation === 'string') {
+            translationText = data.translation;
+          } else if (typeof data === 'object') {
+            const stringProps = Object.values(data).filter(value => typeof value === 'string' && value.trim().length > 0);
+            if (stringProps.length > 0) translationText = stringProps[0];
+          }
+        } catch (e) {
+          if (rawText?.trim() && !rawText.includes('<!DOCTYPE html>')) translationText = rawText;
         }
-      } catch (e) {
-        if (rawText?.trim() && !rawText.includes('<!DOCTYPE html>')) translationText = rawText;
-      }
-      showTranslationPopup(translationText);
-    })
-    .catch(error => {
-      showTranslationPopup(`Error: ${error.message || 'Failed to fetch translation'}`);
-    });
+        showTranslationPopup(translationText);
+      })
+      .catch(error => {
+        showTranslationPopup(`Error: ${error.message || 'Failed to fetch translation'}`);
+      });
   }
-  
+
   // Clear any existing handlers if present.
   if (window._translationHandlers) {
     document.removeEventListener('mouseup', window._translationHandlers.selection);
@@ -445,14 +482,14 @@ function initSidebarButtons() {
   const highlightBtn = document.getElementById('toggle-highlight');
   const flashcardsBtn = document.getElementById('access-flashcards');
   const settingsBtn = document.getElementById('reader-settings');
-  
+
   // Translate page button handler
   translateBtn.addEventListener('click', () => {
     translateBtn.classList.toggle('active');
     alert('Translating entire page...');
     setTimeout(() => translateBtn.classList.remove('active'), 1000);
   });
-  
+
   // Toggle highlighting for unknown words
   highlightBtn.addEventListener('click', () => {
     highlightBtn.classList.toggle('active');
@@ -477,12 +514,12 @@ function initSidebarButtons() {
       if (overrideStyle) overrideStyle.remove();
     }
   });
-  
+
   // Flashcards button handler
   flashcardsBtn.addEventListener('click', () => {
     alert('Opening flashcards interface with your saved words...');
   });
-  
+
   // Settings panel toggle
   settingsBtn.addEventListener('click', () => {
     document.getElementById('settings-panel').classList.toggle('show');
@@ -495,7 +532,7 @@ function initSettingsPanel() {
   closeBtn.addEventListener('click', () => {
     settingsPanel.classList.remove('show');
   });
-  
+
   // Font size controls
   const decreaseFontBtn = document.getElementById('decrease-font');
   const increaseFontBtn = document.getElementById('increase-font');
@@ -517,7 +554,7 @@ function initSettingsPanel() {
     decreaseFontBtn.disabled = currentFontSize <= 14;
     increaseFontBtn.disabled = currentFontSize >= 24;
   }
-  
+
   // Line height controls
   const decreaseLineHeightBtn = document.getElementById('decrease-line-height');
   const increaseLineHeightBtn = document.getElementById('increase-line-height');
@@ -547,7 +584,7 @@ function initSettingsPanel() {
     decreaseLineHeightBtn.disabled = currentLineHeight <= 1.3;
     increaseLineHeightBtn.disabled = currentLineHeight >= 2.2;
   }
-  
+
   // Text width controls
   const decreaseWidthBtn = document.getElementById('decrease-width');
   const increaseWidthBtn = document.getElementById('increase-width');
@@ -569,7 +606,7 @@ function initSettingsPanel() {
     decreaseWidthBtn.disabled = currentWidth <= 500;
     increaseWidthBtn.disabled = currentWidth >= 900;
   }
-  
+
   // Theme controls
   const themeLight = document.getElementById('theme-light');
   const themeSepia = document.getElementById('theme-sepia');
@@ -586,7 +623,7 @@ function initSettingsPanel() {
     themeSepia.classList.toggle('active', theme === 'sepia');
     themeDark.classList.toggle('active', theme === 'dark');
   }
-  
+
   // Font family controls
   const fontSerif = document.getElementById('font-serif');
   const fontSans = document.getElementById('font-sans');

@@ -221,3 +221,9 @@ async function addWordToUserwords(wordId: string): Promise<any> {
     throw err;
   }
 }
+
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.type === 'AUTH_SUCCESS') {
+    sendCurrentPrefsToInjectedScripts();
+  }
+});

@@ -210,4 +210,9 @@ function addWordToUserwords(wordId) {
         }
     });
 }
+chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === 'AUTH_SUCCESS') {
+        sendCurrentPrefsToInjectedScripts();
+    }
+});
 //# sourceMappingURL=contentScript.js.map
